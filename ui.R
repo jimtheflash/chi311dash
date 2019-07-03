@@ -1,5 +1,6 @@
 shiny::shinyUI(
   shiny::fluidPage(
+    tags$head(tags$style(HTML(".leaflet-container { background: #FFFFFF; }"))),
     shiny::titlePanel("Chicago 311 Service Requests"),
     shiny::br(),
     shiny::fluidRow(
@@ -27,17 +28,10 @@ shiny::shinyUI(
       shiny::tabPanel("Map",
                       shiny::br(),
                       shiny::fluidRow(
-                        shiny::column(width = 12,
-                                      leaflet::leafletOutput(outputId = 'chi_map'),
-                                      shiny::absolutePanel(
-                                        id = "controls", 
-                                        class = "panel panel-default", 
-                                        draggable = TRUE, 
-                                        top = 100, left = "auto", right = 60, bottom = "auto",
-                                        width = 300, height = 200,
-                                        shiny::plotOutput(outputId = 'ts_plot',
-                                                          width = 300,
-                                                          height = 200))))),
+                        shiny::column(width = 6,
+                                      leaflet::leafletOutput(outputId = 'chi_map')),
+                        shiny::column(width = 6,
+                                      shiny::plotOutput(outputId = 'ts_plot')))),
       shiny::tabPanel("Data Explorer",
                       shiny::br(),
                       shiny::fluidRow(

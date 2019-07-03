@@ -91,13 +91,7 @@ shiny::shinyServer(function(input, output) {
                             fillOpacity = 0.75,
                             highlightOptions = highlightOptions(color = "white",
                                                                 weight = 2,
-                                                                bringToFront = TRUE)) %>%
-      leaflet::setView(lng = -87.5, lat = 41.84, zoom = 10) %>%
-      leaflet::addProviderTiles(leaflet::providers$Stamen.TonerLines,
-                                options = leaflet::providerTileOptions(opacity = .2)) %>%
-      leaflet::addProviderTiles(leaflet::providers$Stamen.TerrainBackground,
-                                options = leaflet::providerTileOptions(opacity = .3))
-
+                                                                bringToFront = TRUE))
     })
   #### time-series data ####
   ts_input <- shiny::reactive({
@@ -109,13 +103,19 @@ shiny::shinyServer(function(input, output) {
   })
   #### time-series plot ####
   output$ts_plot <- shiny::renderPlot({
-    ts_input() %>%
-      ggplot2::ggplot(ggplot2::aes(x = Date, y = service_requests)) +
+    gg <- ggplot2::ggplot(data = ts_input(),
+                      ggplot2::aes(x = Date, y = service_requests)) +
       ggplot2::geom_smooth() +
       ggplot2::geom_point(alpha = .23) +
+      ggplot2::xlab(NULL) +
+      ggplot2::ylab(NULL) +
+      ggplot2::ggtitle('Service Requests Over Time') +
       ggplot2::theme_minimal()
-        
-  })
+    gg
+  }, 
+  bg = "transparent",
+  height = 300,
+  width = 400)
 })
 
   
