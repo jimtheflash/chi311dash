@@ -55,6 +55,7 @@ shiny::shinyServer(function(input, output) {
       dplyr::select('Community Area' = ca_name,
                     'Service Request Type' = sr_factor,
                     'Count' = ca_sr_total) %>%
+      dplyr::arrange(`Service Request Type`, dplyr::desc(`Count`)) %>%
       DT::datatable()
   })
   #### map input ####
@@ -77,7 +78,7 @@ shiny::shinyServer(function(input, output) {
     })
   #### chicago map ####
   output$chi_map <- leaflet::renderLeaflet({
-    color_palette <- leaflet::colorNumeric("YlGn",
+    color_palette <- leaflet::colorNumeric("Blues",
                                             domain = map_input()$selected_sr_total)
     leaflet::leaflet(data = map_input(),
                      height = 800,
@@ -109,13 +110,13 @@ shiny::shinyServer(function(input, output) {
       ggplot2::geom_point(alpha = .23) +
       ggplot2::xlab(NULL) +
       ggplot2::ylab(NULL) +
-      ggplot2::ggtitle('Service Requests Over Time') +
-      ggplot2::theme_minimal()
+      ggplot2::ggtitle('Selected Service Requests, All Community Areas',
+                       subtitle = 'Each dot represents total service requests for a day') +
+      ggplot2::theme_minimal() +
+      ggplot2::theme(plot.title = ggplot2::element_text(size = 16),
+                     plot.subtitle = ggplot2::element_text(face = 'italic'))
     gg
-  }, 
-  bg = "transparent",
-  height = 300,
-  width = 400)
+  })
 })
 
   
