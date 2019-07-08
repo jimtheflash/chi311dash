@@ -16,7 +16,7 @@ shiny::shinyServer(function(input, output) {
     selected_sr_types
   })
   filtered_data <- shiny::reactive({
-    all_service_requests %>%
+    fd <- all_service_requests %>%
       dplyr::mutate(ca_num = community_area,
                     ca_factor = as.factor(community_area),
                     sr_factor = as.factor(sr_type)) %>%
@@ -28,6 +28,10 @@ shiny::shinyServer(function(input, output) {
       dplyr::filter(sr_type %in% selected_sr_types()) %>%
       dplyr::filter(created_date >= input$daterange[[1]],
              closed_date <= input$daterange[[2]])
+    if (input$openfilter == TRUE) {
+      fd <- dplyr::filter(fd, !is.na(closed_date))
+    }
+    return(fd)
   })
   #### ca sr frequency summary ####
   ca_sr_freq <- shiny::reactive({
@@ -81,6 +85,9 @@ shiny::shinyServer(function(input, output) {
     color_palette <- leaflet::colorNumeric("Blues",
                                             domain = map_input()$selected_sr_total)
     leaflet::leaflet(data = map_input(),
+                     options = leaflet::leafletOptions(doubleClickZoom = FALSE,
+                                                       dragging = FALSE,
+                                                       zoomControl = FALSE),
                      height = 800,
                      width = 1500) %>%
       leaflet:: addPolygons(label = ~popup,
@@ -103,19 +110,23 @@ shiny::shinyServer(function(input, output) {
       dplyr::ungroup()
   })
   #### time-series plot ####
-  output$ts_plot <- shiny::renderPlot({
+  output$ts_plot <- plotly::renderPlotly({
     gg <- ggplot2::ggplot(data = ts_input(),
                       ggplot2::aes(x = Date, y = service_requests)) +
-      ggplot2::geom_smooth() +
-      ggplot2::geom_point(alpha = .23) +
+      ggplot2::geom_point(ggplot2::aes(text = paste0(Date, ': ', 
+                                                     service_requests,
+                                                     ' total service requests')),
+                          alpha = .3, size = .9) +
+      ggplot2::geom_smooth(ggplot2::aes(text = NULL), 
+                           alpha = .5, color = 'black',
+                           se = FALSE, linetype = 'dashed') +
       ggplot2::xlab(NULL) +
       ggplot2::ylab(NULL) +
       ggplot2::ggtitle('Selected Service Requests, All Community Areas',
                        subtitle = 'Each dot represents total service requests for a day') +
       ggplot2::theme_minimal() +
-      ggplot2::theme(plot.title = ggplot2::element_text(size = 16),
-                     plot.subtitle = ggplot2::element_text(face = 'italic'))
-    gg
+      ggplot2::theme(plot.subtitle = ggplot2::element_text(face = 'italic'))
+    plotly::ggplotly(gg, tooltip = 'text')
   })
 })
 

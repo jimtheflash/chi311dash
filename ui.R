@@ -4,12 +4,13 @@ shiny::shinyUI(
     shiny::titlePanel("Chicago 311 Service Requests"),
     shiny::br(),
     shiny::fluidRow(
-      shiny::column(width = 6,
+      shiny::column(width = 5,
                     shiny::selectInput(inputId = 'sr_type',
                                        label = "Select Service Request Type: ",
                                        choices = sr_vec,
                                        multiple = TRUE,
-                                       selectize = TRUE)),
+                                       selectize = TRUE,
+                                       width = '90%')),
       shiny::column(width = 4,
                     shiny::dateRangeInput(inputId = 'daterange',
                                           label = 'Select Date Range: ',
@@ -18,22 +19,25 @@ shiny::shinyUI(
                                           start = as.Date(Sys.Date() - 90),
                                           end = Sys.Date()))),
     shiny::fluidRow(
-      shiny::column(width = 10,
+      shiny::column(width = 4,
                     shiny::checkboxInput(inputId = 'highvolfilter',
                                          label = 'Remove 311 Info Requests and Aircraft Noise Complaints',
                                          value = TRUE,
-                                         width = '100%'))),
+                                         width = '100%'),
+                    shiny::checkboxInput(inputId = 'openfilter',
+                                         label = 'Remove Open Service Requests',
+                                         value = FALSE))),
     shiny::br(),
-    shiny::tabsetPanel(type = "pills",
-      shiny::tabPanel("Map",
-                      shiny::br(),
-                      shiny::fluidRow(
-                        shiny::column(width = 6,
-                                      leaflet::leafletOutput(outputId = 'chi_map')),
-                        shiny::column(width = 6,
-                                      shiny::plotOutput(outputId = 'ts_plot')))),
-      shiny::tabPanel("Data Explorer",
-                      shiny::br(),
-                      shiny::fluidRow(
-                        shiny::column(width = 8,
-                                      DT::dataTableOutput(outputId = 'ca_sr_freq_table')))))))
+    shiny::fluidRow(
+      shiny::column(width = 5,
+                    leaflet::leafletOutput(outputId = 'chi_map')),
+      shiny::column(width = 6,
+                    plotly::plotlyOutput(outputId = 'ts_plot'))),
+    shiny::br(),
+    shiny::h3("Explore Data"),
+    shiny::br(),
+    shiny::fluidRow(
+      shiny::column(width = 11,
+                    DT::dataTableOutput(outputId = 'ca_sr_freq_table')))))
+
+                      

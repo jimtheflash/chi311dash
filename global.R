@@ -1,4 +1,5 @@
 library(leaflet)
+library(plotly)
 library(sf)
 library(shiny)
 library(tidyverse)
