@@ -91,6 +91,8 @@ shiny::shinyServer(function(input, output) {
     leaflet::leaflet(data = map_input(),
                      options = leaflet::leafletOptions(doubleClickZoom = FALSE,
                                                        dragging = FALSE,
+                                                       maxZoom = 10,
+                                                       minZoom = 10,
                                                        zoomControl = FALSE),
                      height = 800,
                      width = 1500) %>%

@@ -39,7 +39,7 @@ shiny::shinyUI(
     shiny::h3("Explore Data"),
     shiny::br(),
     shiny::fluidRow(
-      shiny::column(width = 11,
+      shiny::column(width = 8,
                     shiny::checkboxInput(inputId = 'groupbyca',
                                          label = 'Sum All Service Request Types',
                                          value = TRUE),
