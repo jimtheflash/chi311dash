@@ -19,47 +19,51 @@ shiny::shinyServer(function(input, output) {
     fd <- all_service_requests %>%
       dplyr::mutate(ca_num = community_area,
                     ca_factor = as.factor(community_area),
-                    sr_factor = as.factor(sr_type)) %>%
+                    sr_factor = as.factor(sr_type),
+                    sr_uid = dplyr::if_else(parent_sr_number == '',
+                                            sr_number,
+                                            parent_sr_number)) %>%
       dplyr::filter(!is.na(created_date),
                !is.na(sr_type), 
                !is.na(community_area),
                !is.na(latitude),
                !is.na(longitude)) %>%
       dplyr::filter(sr_type %in% selected_sr_types()) %>%
-      dplyr::filter(created_date >= input$daterange[[1]],
-             closed_date <= input$daterange[[2]])
+      dplyr::filter(created_date >= input$daterange[[1]]) %>% 
+      dplyr::filter((is.na(closed_date)|closed_date <= input$daterange[[2]]))
     if (input$openfilter == TRUE) {
-      fd <- dplyr::filter(fd, !is.na(closed_date))
+      fd <- fd %>%
+        dplyr::filter(!is.na(closed_date))
     }
-    return(fd)
+    fd
   })
   #### ca sr frequency summary ####
   ca_sr_freq <- shiny::reactive({
     ca_with_sr <- filtered_data() %>%
       dplyr::group_by(ca_factor, sr_factor, .drop = FALSE) %>%
-      dplyr::summarise(ca_sr_total = n()) %>%
-      dplyr::ungroup() %>%
-      dplyr::left_join(filtered_data() %>% 
-                         dplyr::group_by(sr_factor) %>%
-                         dplyr::summarise(sr_total = n()) %>%
-                         dplyr::ungroup(), by = "sr_factor") %>%
-      dplyr::left_join(filtered_data() %>%
-                         dplyr::group_by(ca_factor) %>%
-                         dplyr::summarise(ca_total = n()) %>%
-                         dplyr::ungroup(), by = "ca_factor") %>%
+      dplyr::summarise(ca_sr_total = dplyr::n_distinct(sr_number),
+                       unique_ca_sr_total = dplyr::n_distinct(sr_uid)) %>%
       dplyr::ungroup() %>%
       dplyr::mutate(ca_num = as.numeric(as.character(ca_factor))) %>%
       dplyr::full_join(ca_lu, by = "ca_num")
   })
   #### ca sr freq table ####
   output$ca_sr_freq_table <- DT::renderDataTable({
-    ca_sr_freq() %>%
+    table_out <- ca_sr_freq() %>%
       dplyr::inner_join(ca_lu) %>%
       dplyr::filter(sr_factor %in% selected_sr_types()) %>%
       dplyr::select('Community Area' = ca_name,
                     'Service Request Type' = sr_factor,
-                    'Count' = ca_sr_total) %>%
-      dplyr::arrange(`Service Request Type`, dplyr::desc(`Count`)) %>%
+                    'Total Requests' = ca_sr_total) %>%
+      dplyr::arrange(`Service Request Type`, dplyr::desc(`Total Requests`))
+    
+    if (input$groupbyca == TRUE) {
+      table_out <- table_out %>%
+        dplyr::group_by(`Community Area`) %>%
+        dplyr::summarise('Total Requests' = sum(`Total Requests`, na.rm = TRUE)) %>%
+        dplyr::arrange(dplyr::desc(`Total Requests`))
+    }
+     table_out %>%
       DT::datatable()
   })
   #### map input ####
@@ -114,18 +118,14 @@ shiny::shinyServer(function(input, output) {
     gg <- ggplot2::ggplot(data = ts_input(),
                       ggplot2::aes(x = Date, y = service_requests)) +
       ggplot2::geom_point(ggplot2::aes(text = paste0(Date, ': ', 
-                                                     service_requests,
-                                                     ' total service requests')),
+                                                     service_requests)),
                           alpha = .3, size = .9) +
       ggplot2::geom_smooth(ggplot2::aes(text = NULL), 
                            alpha = .5, color = 'black',
                            se = FALSE, linetype = 'dashed') +
       ggplot2::xlab(NULL) +
       ggplot2::ylab(NULL) +
-      ggplot2::ggtitle('Selected Service Requests, All Community Areas',
-                       subtitle = 'Each dot represents total service requests for a day') +
-      ggplot2::theme_minimal() +
-      ggplot2::theme(plot.subtitle = ggplot2::element_text(face = 'italic'))
+      ggplot2::theme_minimal()
     plotly::ggplotly(gg, tooltip = 'text')
   })
 })

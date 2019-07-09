@@ -30,14 +30,19 @@ shiny::shinyUI(
     shiny::br(),
     shiny::fluidRow(
       shiny::column(width = 5,
+                    shiny::h4("Community Areas"),
                     leaflet::leafletOutput(outputId = 'chi_map')),
       shiny::column(width = 6,
+                    shiny::h4("Selected Service Requests Over Time"),
                     plotly::plotlyOutput(outputId = 'ts_plot'))),
     shiny::br(),
     shiny::h3("Explore Data"),
     shiny::br(),
     shiny::fluidRow(
       shiny::column(width = 11,
+                    shiny::checkboxInput(inputId = 'groupbyca',
+                                         label = 'Sum All Service Request Types',
+                                         value = TRUE),
                     DT::dataTableOutput(outputId = 'ca_sr_freq_table')))))
 
                       
