@@ -10,7 +10,9 @@ sr_vec <- sort(unique(all_service_requests$sr_type))
 # community area shapes
 areas <- sf::st_read(
     'data/geo_export_ffc838ed-75e3-4215-b35d-25ca80a32070.shp')
-# vector of community areas
+# ca populations
+pops <- readr::read_csv('data/chi_ca_population.csv')
 ca_lu <- data.frame(ca_num = as.numeric(as.character(areas$area_numbe)),
                     ca_name = as.character(areas$community),
-                    stringsAsFactors = FALSE)
+                    stringsAsFactors = FALSE) %>%
+  dplyr::inner_join(pops, by = 'ca_num')

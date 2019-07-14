@@ -50,21 +50,29 @@ shiny::shinyServer(function(input, output) {
   #### ca sr freq table ####
   output$ca_sr_freq_table <- DT::renderDataTable({
     table_out <- ca_sr_freq() %>%
-      dplyr::inner_join(ca_lu) %>%
       dplyr::filter(sr_factor %in% selected_sr_types()) %>%
-      dplyr::select('Community Area' = ca_name,
+      dplyr::transmute('Community Area' = ca_name,
+                    'Population' = population,
                     'Service Request Type' = sr_factor,
-                    'Total Requests' = ca_sr_total) %>%
+                    'Total Requests' = ca_sr_total,
+                    'Requests Per Person' = ca_sr_total / population) %>%
       dplyr::arrange(`Service Request Type`, dplyr::desc(`Total Requests`))
     
     if (input$groupbyca == TRUE) {
       table_out <- table_out %>%
         dplyr::group_by(`Community Area`) %>%
-        dplyr::summarise('Total Requests' = sum(`Total Requests`, na.rm = TRUE)) %>%
+        dplyr::summarise('Population' = max(Population, na.rm = TRUE),
+                         'Total Requests' = sum(`Total Requests`, na.rm = TRUE),
+                         'Requests Per Person' = sum(`Total Requests`, na.rm = TRUE) / max(Population, na.rm = TRUE)) %>%
         dplyr::arrange(dplyr::desc(`Total Requests`))
     }
      table_out %>%
-      DT::datatable()
+      DT::datatable(filter = 'top',
+                    rownames = FALSE, 
+                    options = list(pageLength = 100)) %>%
+      DT::formatRound(columns = 'Requests Per Person', digits = 3) %>%
+      DT::formatCurrency(columns = c('Population', 'Total Requests'),
+                         currency = "", interval = 3, mark = ",", digits = 0)
   })
   #### map input ####
   map_input <- shiny::reactive({
@@ -75,19 +83,31 @@ shiny::shinyServer(function(input, output) {
                          dplyr::group_by(ca_factor, .drop = FALSE) %>%
                          dplyr::summarise(
                            ca_num = max(ca_num),
-                           selected_sr_total = sum(ca_sr_total, na.rm = FALSE)) %>%
+                           selected_sr_total = sum(ca_sr_total, na.rm = FALSE),
+                           selected_sr_per_person = sum(ca_sr_total, na.rm = FALSE) / max(population, na.rm = TRUE)) %>%
                          dplyr::ungroup(),
-                       by = 'ca_num')  %>%
-      dplyr::mutate(popup = stringr::str_c("<strong>", community, "</strong>",
-                                           "<br/>",
-                                           "Service Requests: ", selected_sr_total) %>%
-                      purrr::map(htmltools::HTML))
+                       by = 'ca_num')
+    if (input$popcor == TRUE) {
+      map_input <- map_input %>%
+        dplyr::mutate(plot_val = selected_sr_per_person,
+                      popup = stringr::str_c("<strong>", community, "</strong>",
+                                             "<br/>",
+                                             "Service Requests Per Person: ", round(selected_sr_per_person, 3)) %>%
+                        purrr::map(htmltools::HTML))
+    } else {
+      map_input <- map_input %>%
+        dplyr::mutate(plot_val = selected_sr_total,
+                      popup = stringr::str_c("<strong>", community, "</strong>",
+                                             "<br/>",
+                                             "Service Requests: ", selected_sr_total) %>%
+                        purrr::map(htmltools::HTML))
+    }
     map_input
     })
   #### chicago map ####
   output$chi_map <- leaflet::renderLeaflet({
     color_palette <- leaflet::colorNumeric("Blues",
-                                            domain = map_input()$selected_sr_total)
+                                            domain = map_input()$plot_val)
     leaflet::leaflet(data = map_input(),
                      options = leaflet::leafletOptions(doubleClickZoom = FALSE,
                                                        dragging = FALSE,
@@ -97,7 +117,7 @@ shiny::shinyServer(function(input, output) {
                      height = 800,
                      width = 1500) %>%
       leaflet:: addPolygons(label = ~popup,
-                            fillColor = ~color_palette(selected_sr_total),
+                            fillColor = ~color_palette(plot_val),
                             color = "#444444",
                             weight = 1,
                             smoothFactor = 0.5,
@@ -125,8 +145,8 @@ shiny::shinyServer(function(input, output) {
       ggplot2::geom_smooth(ggplot2::aes(text = NULL), 
                            alpha = .5, color = 'black',
                            se = FALSE, linetype = 'dashed') +
-      ggplot2::xlab(NULL) +
-      ggplot2::ylab(NULL) +
+      ggplot2::xlab("Date Service Request Created") +
+      ggplot2::ylab("Total Selected Service Requests") +
       ggplot2::theme_minimal()
     plotly::ggplotly(gg, tooltip = 'text')
   })
