@@ -55,7 +55,7 @@ shiny::shinyServer(function(input, output) {
                     'Population' = population,
                     'Service Request Type' = sr_factor,
                     'Total Requests' = ca_sr_total,
-                    'Requests Per Person' = ca_sr_total / population) %>%
+                    'Requests Per 10K' = ca_sr_total / population * 10000) %>%
       dplyr::arrange(`Service Request Type`, dplyr::desc(`Total Requests`))
     
     if (input$groupbyca == TRUE) {
@@ -63,14 +63,14 @@ shiny::shinyServer(function(input, output) {
         dplyr::group_by(`Community Area`) %>%
         dplyr::summarise('Population' = max(Population, na.rm = TRUE),
                          'Total Requests' = sum(`Total Requests`, na.rm = TRUE),
-                         'Requests Per Person' = sum(`Total Requests`, na.rm = TRUE) / max(Population, na.rm = TRUE)) %>%
+                         'Requests Per 10K' = sum(`Total Requests`, na.rm = TRUE) / max(Population, na.rm = TRUE) * 10000) %>%
         dplyr::arrange(dplyr::desc(`Total Requests`))
     }
      table_out %>%
       DT::datatable(filter = 'top',
                     rownames = FALSE, 
                     options = list(pageLength = 100)) %>%
-      DT::formatRound(columns = 'Requests Per Person', digits = 3) %>%
+      DT::formatRound(columns = 'Requests Per 10K', digits = 0) %>%
       DT::formatCurrency(columns = c('Population', 'Total Requests'),
                          currency = "", interval = 3, mark = ",", digits = 0)
   })
@@ -84,15 +84,15 @@ shiny::shinyServer(function(input, output) {
                          dplyr::summarise(
                            ca_num = max(ca_num),
                            selected_sr_total = sum(ca_sr_total, na.rm = FALSE),
-                           selected_sr_per_person = sum(ca_sr_total, na.rm = FALSE) / max(population, na.rm = TRUE)) %>%
+                           selected_sr_per_10K = sum(ca_sr_total, na.rm = FALSE) / max(population, na.rm = TRUE) * 10000) %>%
                          dplyr::ungroup(),
                        by = 'ca_num')
     if (input$popcor == TRUE) {
       map_input <- map_input %>%
-        dplyr::mutate(plot_val = selected_sr_per_person,
+        dplyr::mutate(plot_val = selected_sr_per_10K,
                       popup = stringr::str_c("<strong>", community, "</strong>",
                                              "<br/>",
-                                             "Service Requests Per Person: ", round(selected_sr_per_person, 3)) %>%
+                                             "Service Requests Per 10K: ", round(selected_sr_per_10K)) %>%
                         purrr::map(htmltools::HTML))
     } else {
       map_input <- map_input %>%
@@ -106,7 +106,7 @@ shiny::shinyServer(function(input, output) {
     })
   #### chicago map ####
   output$chi_map <- leaflet::renderLeaflet({
-    color_palette <- leaflet::colorNumeric("Blues",
+    color_palette <- leaflet::colorNumeric("Greens",
                                             domain = map_input()$plot_val)
     leaflet::leaflet(data = map_input(),
                      options = leaflet::leafletOptions(doubleClickZoom = FALSE,
