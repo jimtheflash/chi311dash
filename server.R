@@ -125,7 +125,11 @@ shiny::shinyServer(function(input, output) {
                             fillOpacity = 0.75,
                             highlightOptions = highlightOptions(color = "white",
                                                                 weight = 2,
-                                                                bringToFront = TRUE))
+                                                                bringToFront = TRUE)) %>%
+      leaflet::addLegend(pal = color_palette, 
+                         values = map_input()$plot_val,
+                         position = "bottomleft",
+                         opacity = 1)
     })
   #### time-series data ####
   ts_input <- shiny::reactive({

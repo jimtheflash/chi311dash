@@ -1,6 +1,9 @@
 shiny::shinyUI(
   shiny::fluidPage(
-    tags$head(tags$style(HTML(".leaflet-container { background: #FFFFFF; }"))),
+    tags$head(tags$style(shiny::HTML(
+      ".leaflet-container {background: #FFFFFF;}
+      .leaflet .info {background: #FFFFFF; 
+                      box-shadow: none; }"))),
     shiny::titlePanel("Chicago 311 Service Requests"),
     shiny::br(),
     shiny::fluidRow(
@@ -19,20 +22,21 @@ shiny::shinyUI(
                                           start = as.Date(Sys.Date() - 90),
                                           end = Sys.Date()))),
     shiny::fluidRow(
-      shiny::column(width = 5,
-                    shiny::checkboxInput(inputId = 'highvolfilter',
-                                         label = 'Remove 311 Info Requests and Aircraft Noise Complaints',
-                                         value = TRUE,
-                                         width = '90%'),
-                    shiny::checkboxInput(inputId = 'popcor',
-                                         label = 'Adjust Count of Service Requests For Community Area Population',
-                                         value = TRUE,
-                                         width = '100%')),
-      shiny::column(width = 4,
-                    shiny::checkboxInput(inputId = 'openfilter',
-                                         label = 'Remove Open Service Requests',
-                                         value = FALSE))),
-    shiny::br(),
+      shiny::column(width = 9,
+        shinyBS::bsCollapsePanel("Additional Filters",
+          shiny::column(width = 6,
+                     shiny::checkboxInput(inputId = 'highvolfilter',
+                                          label = 'Remove 311 Info Requests and Aircraft Noise Complaints',
+                                          value = TRUE,
+                                          width = '90%'),
+                     shiny::checkboxInput(inputId = 'popcor',
+                                          label = 'Adjust Count of Service Requests For Community Area Population',
+                                          value = TRUE,
+                                          width = '100%')),
+          shiny::column(width = 4,
+                     shiny::checkboxInput(inputId = 'openfilter',
+                                          label = 'Remove Open Service Requests',
+                                          value = FALSE))))),
     shiny::fluidRow(
       shiny::column(width = 5,
                     shiny::h3("Community Areas"),
