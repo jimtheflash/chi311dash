@@ -106,7 +106,7 @@ shiny::shinyServer(function(input, output) {
     })
   #### chicago map ####
   output$chi_map <- leaflet::renderLeaflet({
-    color_palette <- leaflet::colorNumeric("Greens",
+    color_palette <- leaflet::colorNumeric(palette = "Greens",
                                             domain = map_input()$plot_val)
     leaflet::leaflet(data = map_input(),
                      options = leaflet::leafletOptions(doubleClickZoom = FALSE,
