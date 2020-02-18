@@ -69,7 +69,8 @@ shiny::shinyServer(function(input, output) {
      table_out %>%
       DT::datatable(filter = 'top',
                     rownames = FALSE, 
-                    options = list(pageLength = 100)) %>%
+                    options = list(dom = 'ltip',
+                                   pageLength = 100)) %>%
       DT::formatRound(columns = 'Requests Per 10K', digits = 0) %>%
       DT::formatCurrency(columns = c('Population', 'Total Requests'),
                          currency = "", interval = 3, mark = ",", digits = 0)
@@ -106,7 +107,7 @@ shiny::shinyServer(function(input, output) {
     })
   #### chicago map ####
   output$chi_map <- leaflet::renderLeaflet({
-    color_palette <- leaflet::colorNumeric(palette = "Greens",
+    color_palette <- leaflet::colorNumeric(palette = "Blues",
                                             domain = map_input()$plot_val)
     leaflet::leaflet(data = map_input(),
                      options = leaflet::leafletOptions(doubleClickZoom = FALSE,
@@ -129,6 +130,7 @@ shiny::shinyServer(function(input, output) {
       leaflet::addLegend(pal = color_palette, 
                          values = map_input()$plot_val,
                          position = "bottomleft",
+                         title = "Legend",
                          opacity = 1)
     })
   #### time-series data ####

@@ -1,6 +1,8 @@
+title_text <- "Chicago 311 Service Requests"
 shiny::shinyUI(
   shiny::fluidPage(
     tags$head(tags$style(shiny::HTML("
+    a {color: gray;}
     .panel-default {background: #FFFFFF;
                     border: none;
                     border-color: #FFFFFF;
@@ -11,11 +13,17 @@ shiny::shinyUI(
     .leaflet-container {background: #FFFFFF;}
     .leaflet .info {background: #FFFFFF; 
                     box-shadow: none;}"))),
-    shiny::titlePanel("Chicago 311 Service Requests"),
+    shiny::titlePanel(windowTitle = title_text,
+      title=shiny::div(
+        shiny::img(src="Flag_of_Chicago,_Illinois.png",
+                   height=100,
+                   width=150),
+        title_text)),
     shiny::em("First, select service requests and time frame, and any additional filters."),
     shiny::br(),
     shiny::em("Next, navigate to the tab of interest. You can view a map summarizing service request counts by neighborhood, a time series, or explore the data on your own."),
     shiny::br(),
+    shiny::hr(),
     shiny::fluidRow(
       shiny::column(width = 4,
                     shiny::selectInput(inputId = 'sr_type',
@@ -33,39 +41,48 @@ shiny::shinyUI(
                                           end = Sys.Date()))),
     shiny::fluidRow(
       shiny::column(width = 4,
-        shinyBS::bsCollapsePanel(shiny::em(shiny::HTML("<u>Additional Filters</u>")),
+        shinyBS::bsCollapsePanel(shiny::HTML("<u>Click For Additional Filters</u>"),
                    shinyWidgets::prettyCheckbox(inputId = 'highvolfilter',
                                         label = 'Remove 311 Info Requests and Aircraft Noise Complaints',
                                         icon = shiny::icon("check"),
                                         status = "default",
                                         value = TRUE,
                                         width = '90%'),
-                   shinyWidgets::prettyCheckbox(inputId = 'popcor',
-                                        label = 'Adjust Count of Service Requests For Community Area Population',
-                                        icon = shiny::icon("check"),
-                                        status = "default",
-                                        value = TRUE,
-                                        width = '100%'),
                    shinyWidgets::prettyCheckbox(inputId = 'openfilter',
                                         label = 'Remove Open Service Requests',
                                         icon = shiny::icon("check"),
                                         status = "default",
                                         value = FALSE)))),
-    shiny::fluidRow(
-      shiny::column(width = 5,
-                    shiny::h3("Community Areas"),
-                    leaflet::leafletOutput(outputId = 'chi_map')),
-      shiny::column(width = 6,
-                    shiny::h3("Selected Service Requests Over Time"),
-                    plotly::plotlyOutput(outputId = 'ts_plot'))),
-    shiny::br(),
-    shiny::h3("Explore Data"),
-    shiny::br(),
-    shiny::fluidRow(
-      shiny::column(width = 11,
-                    shiny::checkboxInput(inputId = 'groupbyca',
-                                         label = 'Sum All Service Request Types',
-                                         value = TRUE),
-                    DT::dataTableOutput(outputId = 'ca_sr_freq_table')))))
+    shiny::tabsetPanel(
+      shiny::tabPanel(shiny::strong("Visualizations"),
+        shiny::fluidRow(
+          shiny::column(width = 4,
+                        shiny::h3("Service Requests By Neighborhood"),
+                        shinyWidgets::prettyCheckbox(inputId = 'popcor',
+                                                     label = 'Correct For Neighborhood Population',
+                                                     icon = shiny::icon("check"),
+                                                     status = "default",
+                                                     value = FALSE,
+                                                     width = '100%'),
+                        leaflet::leafletOutput(outputId = 'chi_map')),
+          shiny::column(width = 4,
+                        shiny::h3("Selected Service Requests Over Time"),
+                        plotly::plotlyOutput(outputId = 'ts_plot')))),
+      shiny::tabPanel(shiny::strong("Explore Data"),
+        shiny::fluidRow(
+          shiny::column(width = 10,
+                        shiny::br(),
+                        shinyWidgets::prettyCheckbox(inputId = 'groupbyca',
+                                             label = 'Sum All Service Request Types',
+                                             icon = shiny::icon("check"),
+                                             status = "default",
+                                             value = TRUE),
+                        DT::dataTableOutput(outputId = 'ca_sr_freq_table')))))
+    )
+  
+  )
+
+
+
 
                       
