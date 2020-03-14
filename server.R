@@ -1,8 +1,12 @@
 shiny::shinyServer(function(input, output) {
+  # import pipes
+  import::from(magrittr, '%>%')
+
   #### filter for input to plots, tables ####
   # 311 info and aircraft noise complaints dominate 311 complaints and show up
   # mostly in airports or the 311 call center; these also aren't really services
   # that the city can do anything about, so sensible to remove
+
   selected_sr_types <- shiny::reactive({
     if (is.null(input$sr_type)) {
       selected_sr_types <- sr_vec
@@ -24,12 +28,12 @@ shiny::shinyServer(function(input, output) {
                                             sr_number,
                                             parent_sr_number)) %>%
       dplyr::filter(!is.na(created_date),
-               !is.na(sr_type), 
+               !is.na(sr_type),
                !is.na(community_area),
                !is.na(latitude),
                !is.na(longitude)) %>%
       dplyr::filter(sr_type %in% selected_sr_types()) %>%
-      dplyr::filter(created_date >= input$daterange[[1]]) %>% 
+      dplyr::filter(created_date >= input$daterange[[1]]) %>%
       dplyr::filter((is.na(closed_date)|closed_date <= input$daterange[[2]]))
     if (input$openfilter == TRUE) {
       fd <- fd %>%
@@ -57,7 +61,7 @@ shiny::shinyServer(function(input, output) {
                     'Total Requests' = ca_sr_total,
                     'Requests Per 10K' = ca_sr_total / population * 10000) %>%
       dplyr::arrange(`Service Request Type`, dplyr::desc(`Total Requests`))
-    
+
     if (input$groupbyca == TRUE) {
       table_out <- table_out %>%
         dplyr::group_by(`Community Area`) %>%
@@ -68,7 +72,7 @@ shiny::shinyServer(function(input, output) {
     }
      table_out %>%
       DT::datatable(filter = 'top',
-                    rownames = FALSE, 
+                    rownames = FALSE,
                     options = list(dom = 'ltip',
                                    pageLength = 100)) %>%
       DT::formatRound(columns = 'Requests Per 10K', digits = 0) %>%
@@ -127,7 +131,7 @@ shiny::shinyServer(function(input, output) {
                             highlightOptions = highlightOptions(color = "white",
                                                                 weight = 2,
                                                                 bringToFront = TRUE)) %>%
-      leaflet::addLegend(pal = color_palette, 
+      leaflet::addLegend(pal = color_palette,
                          values = map_input()$plot_val,
                          position = "bottomleft",
                          title = "Legend",
@@ -145,10 +149,10 @@ shiny::shinyServer(function(input, output) {
   output$ts_plot <- plotly::renderPlotly({
     gg <- ggplot2::ggplot(data = ts_input(),
                       ggplot2::aes(x = Date, y = service_requests)) +
-      ggplot2::geom_point(ggplot2::aes(text = paste0(Date, ': ', 
+      ggplot2::geom_point(ggplot2::aes(text = paste0(Date, ': ',
                                                      service_requests)),
                           alpha = .3, size = .9) +
-      ggplot2::geom_smooth(ggplot2::aes(text = NULL), 
+      ggplot2::geom_smooth(ggplot2::aes(text = NULL),
                            alpha = .5, color = 'black',
                            se = FALSE, linetype = 'dashed') +
       ggplot2::xlab("Date Service Request Created") +
@@ -158,5 +162,5 @@ shiny::shinyServer(function(input, output) {
   })
 })
 
-  
-  
+
+
