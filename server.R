@@ -1,6 +1,4 @@
 shiny::shinyServer(function(input, output) {
-  # import pipes
-  import::from(magrittr, '%>%')
 
   #### filter for input to plots, tables ####
   # 311 info and aircraft noise complaints dominate 311 complaints and show up
