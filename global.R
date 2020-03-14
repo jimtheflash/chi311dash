@@ -7,6 +7,7 @@ library(shinyWidgets)
 library(ggplot2)
 library(dplyr)
 library(readr)
+library(stringr)
 library(tidyr)
 # import::from(magrittr, '%>%')
 
