@@ -128,9 +128,9 @@ shiny::shinyServer(function(input, output) {
                             smoothFactor = 0.5,
                             opacity = 1.0,
                             fillOpacity = 0.75,
-                            highlightOptions = highlightOptions(color = "white",
-                                                                weight = 2,
-                                                                bringToFront = TRUE)) %>%
+                            highlightOptions = leaflet::highlightOptions(color = "white",
+                                                                          weight = 2,
+                                                                          bringToFront = TRUE)) %>%
       leaflet::addLegend(pal = color_palette,
                          values = map_input()$plot_val,
                          position = "bottomleft",
@@ -153,6 +153,7 @@ shiny::shinyServer(function(input, output) {
                                                      service_requests)),
                           alpha = .3, size = .9) +
       ggplot2::geom_smooth(ggplot2::aes(text = NULL),
+                           method = 'loess', formula = 'y ~ x',
                            alpha = .5, color = 'black',
                            se = FALSE, linetype = 'dashed') +
       ggplot2::xlab("Date Service Request Created") +
