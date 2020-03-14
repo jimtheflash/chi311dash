@@ -1,8 +1,10 @@
 shiny::shinyServer(function(input, output) {
+
   #### filter for input to plots, tables ####
   # 311 info and aircraft noise complaints dominate 311 complaints and show up
   # mostly in airports or the 311 call center; these also aren't really services
   # that the city can do anything about, so sensible to remove
+
   selected_sr_types <- shiny::reactive({
     if (is.null(input$sr_type)) {
       selected_sr_types <- sr_vec
@@ -24,12 +26,12 @@ shiny::shinyServer(function(input, output) {
                                             sr_number,
                                             parent_sr_number)) %>%
       dplyr::filter(!is.na(created_date),
-               !is.na(sr_type), 
+               !is.na(sr_type),
                !is.na(community_area),
                !is.na(latitude),
                !is.na(longitude)) %>%
       dplyr::filter(sr_type %in% selected_sr_types()) %>%
-      dplyr::filter(created_date >= input$daterange[[1]]) %>% 
+      dplyr::filter(created_date >= input$daterange[[1]]) %>%
       dplyr::filter((is.na(closed_date)|closed_date <= input$daterange[[2]]))
     if (input$openfilter == TRUE) {
       fd <- fd %>%
@@ -55,22 +57,23 @@ shiny::shinyServer(function(input, output) {
                     'Population' = population,
                     'Service Request Type' = sr_factor,
                     'Total Requests' = ca_sr_total,
-                    'Requests Per Person' = ca_sr_total / population) %>%
+                    'Requests Per 10K' = ca_sr_total / population * 10000) %>%
       dplyr::arrange(`Service Request Type`, dplyr::desc(`Total Requests`))
-    
+
     if (input$groupbyca == TRUE) {
       table_out <- table_out %>%
         dplyr::group_by(`Community Area`) %>%
         dplyr::summarise('Population' = max(Population, na.rm = TRUE),
                          'Total Requests' = sum(`Total Requests`, na.rm = TRUE),
-                         'Requests Per Person' = sum(`Total Requests`, na.rm = TRUE) / max(Population, na.rm = TRUE)) %>%
+                         'Requests Per 10K' = sum(`Total Requests`, na.rm = TRUE) / max(Population, na.rm = TRUE) * 10000) %>%
         dplyr::arrange(dplyr::desc(`Total Requests`))
     }
      table_out %>%
       DT::datatable(filter = 'top',
-                    rownames = FALSE, 
-                    options = list(pageLength = 100)) %>%
-      DT::formatRound(columns = 'Requests Per Person', digits = 3) %>%
+                    rownames = FALSE,
+                    options = list(dom = 'ltip',
+                                   pageLength = 100)) %>%
+      DT::formatRound(columns = 'Requests Per 10K', digits = 0) %>%
       DT::formatCurrency(columns = c('Population', 'Total Requests'),
                          currency = "", interval = 3, mark = ",", digits = 0)
   })
@@ -84,15 +87,15 @@ shiny::shinyServer(function(input, output) {
                          dplyr::summarise(
                            ca_num = max(ca_num),
                            selected_sr_total = sum(ca_sr_total, na.rm = FALSE),
-                           selected_sr_per_person = sum(ca_sr_total, na.rm = FALSE) / max(population, na.rm = TRUE)) %>%
+                           selected_sr_per_10K = sum(ca_sr_total, na.rm = FALSE) / max(population, na.rm = TRUE) * 10000) %>%
                          dplyr::ungroup(),
                        by = 'ca_num')
     if (input$popcor == TRUE) {
       map_input <- map_input %>%
-        dplyr::mutate(plot_val = selected_sr_per_person,
+        dplyr::mutate(plot_val = selected_sr_per_10K,
                       popup = stringr::str_c("<strong>", community, "</strong>",
                                              "<br/>",
-                                             "Service Requests Per Person: ", round(selected_sr_per_person, 3)) %>%
+                                             "Service Requests Per 10K: ", round(selected_sr_per_10K)) %>%
                         purrr::map(htmltools::HTML))
     } else {
       map_input <- map_input %>%
@@ -106,7 +109,7 @@ shiny::shinyServer(function(input, output) {
     })
   #### chicago map ####
   output$chi_map <- leaflet::renderLeaflet({
-    color_palette <- leaflet::colorNumeric("Blues",
+    color_palette <- leaflet::colorNumeric(palette = "Blues",
                                             domain = map_input()$plot_val)
     leaflet::leaflet(data = map_input(),
                      options = leaflet::leafletOptions(doubleClickZoom = FALSE,
@@ -123,9 +126,14 @@ shiny::shinyServer(function(input, output) {
                             smoothFactor = 0.5,
                             opacity = 1.0,
                             fillOpacity = 0.75,
-                            highlightOptions = highlightOptions(color = "white",
-                                                                weight = 2,
-                                                                bringToFront = TRUE))
+                            highlightOptions = leaflet::highlightOptions(color = "white",
+                                                                          weight = 2,
+                                                                          bringToFront = TRUE)) %>%
+      leaflet::addLegend(pal = color_palette,
+                         values = map_input()$plot_val,
+                         position = "bottomleft",
+                         title = "Legend",
+                         opacity = 1)
     })
   #### time-series data ####
   ts_input <- shiny::reactive({
@@ -139,10 +147,11 @@ shiny::shinyServer(function(input, output) {
   output$ts_plot <- plotly::renderPlotly({
     gg <- ggplot2::ggplot(data = ts_input(),
                       ggplot2::aes(x = Date, y = service_requests)) +
-      ggplot2::geom_point(ggplot2::aes(text = paste0(Date, ': ', 
+      ggplot2::geom_point(ggplot2::aes(text = paste0(Date, ': ',
                                                      service_requests)),
                           alpha = .3, size = .9) +
-      ggplot2::geom_smooth(ggplot2::aes(text = NULL), 
+      ggplot2::geom_smooth(ggplot2::aes(text = NULL),
+                           method = 'loess', formula = 'y ~ x',
                            alpha = .5, color = 'black',
                            se = FALSE, linetype = 'dashed') +
       ggplot2::xlab("Date Service Request Created") +
@@ -152,5 +161,5 @@ shiny::shinyServer(function(input, output) {
   })
 })
 
-  
-  
+
+

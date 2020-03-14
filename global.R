@@ -2,7 +2,14 @@ library(leaflet)
 library(plotly)
 library(sf)
 library(shiny)
-library(tidyverse)
+library(shinyBS)
+library(shinyWidgets)
+library(ggplot2)
+library(dplyr)
+library(readr)
+library(tidyr)
+# import::from(magrittr, '%>%')
+
 # sr data
 all_service_requests <- readRDS('data/311_service_requests.rds')
 # vector of service request types
