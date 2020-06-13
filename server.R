@@ -31,8 +31,8 @@ shiny::shinyServer(function(input, output) {
                !is.na(latitude),
                !is.na(longitude)) %>%
       dplyr::filter(sr_type %in% selected_sr_types()) %>%
-      dplyr::filter(created_date >= input$daterange[[1]]) %>%
-      dplyr::filter((is.na(closed_date)|closed_date <= input$daterange[[2]]))
+      dplyr::filter(as.Date(created_date) >= input$daterange[[1]]) %>%
+      dplyr::filter((is.na(closed_date)|as.Date(closed_date) <= input$daterange[[2]]))
     if (input$openfilter == TRUE) {
       fd <- fd %>%
         dplyr::filter(!is.na(closed_date))
@@ -65,7 +65,8 @@ shiny::shinyServer(function(input, output) {
         dplyr::group_by(`Community Area`) %>%
         dplyr::summarise('Population' = max(Population, na.rm = TRUE),
                          'Total Requests' = sum(`Total Requests`, na.rm = TRUE),
-                         'Requests Per 10K' = sum(`Total Requests`, na.rm = TRUE) / max(Population, na.rm = TRUE) * 10000) %>%
+                         'Requests Per 1K' = sum(`Total Requests`, na.rm = TRUE) / max(Population, na.rm = TRUE) * 1000) %>%
+        dplyr::ungroup() %>%
         dplyr::arrange(dplyr::desc(`Total Requests`))
     }
      table_out %>%
@@ -73,7 +74,7 @@ shiny::shinyServer(function(input, output) {
                     rownames = FALSE,
                     options = list(dom = 'ltip',
                                    pageLength = 100)) %>%
-      DT::formatRound(columns = 'Requests Per 10K', digits = 0) %>%
+      DT::formatRound(columns = 'Requests Per 1K', digits = 0) %>%
       DT::formatCurrency(columns = c('Population', 'Total Requests'),
                          currency = "", interval = 3, mark = ",", digits = 0)
   })
@@ -87,15 +88,15 @@ shiny::shinyServer(function(input, output) {
                          dplyr::summarise(
                            ca_num = max(ca_num),
                            selected_sr_total = sum(ca_sr_total, na.rm = FALSE),
-                           selected_sr_per_10K = sum(ca_sr_total, na.rm = FALSE) / max(population, na.rm = TRUE) * 10000) %>%
+                           selected_sr_per_1K = sum(ca_sr_total, na.rm = FALSE) / max(population, na.rm = TRUE) * 1000) %>%
                          dplyr::ungroup(),
                        by = 'ca_num')
     if (input$popcor == TRUE) {
       map_input <- map_input %>%
-        dplyr::mutate(plot_val = selected_sr_per_10K,
+        dplyr::mutate(plot_val = selected_sr_per_1K,
                       popup = stringr::str_c("<strong>", community, "</strong>",
                                              "<br/>",
-                                             "Service Requests Per 10K: ", round(selected_sr_per_10K)) %>%
+                                             "Service Requests Per 1K: ", round(selected_sr_per_1K)) %>%
                         purrr::map(htmltools::HTML))
     } else {
       map_input <- map_input %>%

@@ -1,4 +1,4 @@
-title_text <- "Chicago 311 Service Requests"
+title_text <- "Chicago Community Area 311 Service Requests"
 shiny::shinyUI(
   shiny::fluidPage(
     tags$head(tags$style(shiny::HTML("
@@ -11,7 +11,7 @@ shiny::shinyUI(
                              border-color: white;
                              color: black;}
     .leaflet-container {background: #FFFFFF;}
-    .leaflet .info {background: #FFFFFF; 
+    .leaflet .info {background: #FFFFFF;
                     box-shadow: none;}"))),
     shiny::titlePanel(windowTitle = title_text,
       title=shiny::div(
@@ -21,7 +21,7 @@ shiny::shinyUI(
         title_text)),
     shiny::em("First, select service requests and time frame, and any additional filters."),
     shiny::br(),
-    shiny::em("Next, navigate to the tab of interest. You can view a map summarizing service request counts by neighborhood, a time series, or explore the data on your own."),
+    shiny::em("Next, navigate to the tab of interest. You can view a map summarizing service request counts by community area, a time series, or explore the data on your own."),
     shiny::br(),
     shiny::hr(),
     shiny::fluidRow(
@@ -57,9 +57,9 @@ shiny::shinyUI(
       shiny::tabPanel(shiny::strong("Visualizations"),
         shiny::fluidRow(
           shiny::column(width = 4,
-                        shiny::h3("Service Requests By Neighborhood"),
+                        shiny::h3("Service Requests By Community Area"),
                         shinyWidgets::prettyCheckbox(inputId = 'popcor',
-                                                     label = 'Correct For Neighborhood Population',
+                                                     label = 'Adjust For Population (Reqs Per 1K)',
                                                      icon = shiny::icon("check"),
                                                      status = "default",
                                                      value = FALSE,
@@ -79,10 +79,9 @@ shiny::shinyUI(
                                              value = TRUE),
                         DT::dataTableOutput(outputId = 'ca_sr_freq_table')))))
     )
-  
+
   )
 
 
 
 
-                      
