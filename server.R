@@ -57,7 +57,7 @@ shiny::shinyServer(function(input, output) {
                     'Population' = population,
                     'Service Request Type' = sr_factor,
                     'Total Requests' = ca_sr_total,
-                    'Requests Per 10K' = ca_sr_total / population * 10000) %>%
+                    'Requests Per 1K' = ca_sr_total / population * 1000) %>%
       dplyr::arrange(`Service Request Type`, dplyr::desc(`Total Requests`))
 
     if (input$groupbyca == TRUE) {
