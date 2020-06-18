@@ -24,7 +24,11 @@ knitr::opts_chunk$set(echo = TRUE)
 
 * The city of Chicago can be divided into 77 distinct neighborhoods called community areas
 
-* While community areas don't map directly onto electoral districts, residents strongly identify with their community areas, and they are an important way to measure...
+* Community areas have static boundaries, unlike 
+
+* While community areas don't map directly onto electoral districts, residents strongly identify with their community areas
+
+
 
 # Question
 
