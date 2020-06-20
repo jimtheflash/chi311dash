@@ -5,6 +5,6 @@ account: jimtheflash
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 1014728
-bundleId: 3291424
+bundleId: 3295240
 url: https://jimtheflash.shinyapps.io/chi311dash/
-when: 1592565825.97072
+when: 1592652324.49149
